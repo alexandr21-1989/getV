@@ -2,7 +2,8 @@ import httpx
 from bs4 import BeautifulSoup as bs
 from typing import Dict, Any
 from fastapi import FastAPI
-
+import html
+from urllib.parse import quote, unquote
 
 app = FastAPI()
 
@@ -12,10 +13,17 @@ async def get_home():
     return {"error": "bad request"}
 
 
-@app.post("/")
-async def receive_payload(payload: dict):
-    if len(payload) and payload["l"] != "" and payload["p"] != "":
-        return await get(payload["l"], payload["p"])
+@app.get("/{l}/{p}/")
+async def receive_payload(l: str, p: str):
+    print(p)
+    if l != "" and p != "":
+        try:
+            decode_html_text = decode_html(l, p)
+            print(decode_html_text)
+            print(enecode_html("sdfsdf", "dsfsdf#dsgdsg"))
+            return await get(decode_html_text["l"], decode_html_text["p"])
+        except:
+            return {"error": "bad request"}
     else:
         return {"error": "bad request"}
 
@@ -53,13 +61,25 @@ async def get(l: str, p: str) -> Dict[str, Any]:
                 data_res = {
                     "error": "bad answer"
                 }
-
+        return data_res
     except httpx.RequestError as e:
         data_res = {
             "error": "RequestError"
         }
+        return data_res
     except (AttributeError, KeyError) as e:
         data_res = {
             "error": "AttributeError"
         }
-    return data_res
+        return data_res
+
+
+
+def decode_html(l_text: str, p_text: str) -> dict:
+    decode_text = {"l": unquote(l_text), "p": unquote(p_text)}
+    return decode_text
+
+
+def enecode_html(l_text: str, p_text: str) -> dict:
+    decode_text = {"l": quote(l_text), "p": quote(p_text)}
+    return decode_text
